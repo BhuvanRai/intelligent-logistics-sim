@@ -1,0 +1,59 @@
+name: intelligent-logistics-orchestration
+version: "1.0.0"
+description: >
+  A real-world OpenEnv environment that simulates intelligent logistics
+  orchestration. An AI agent assigns drivers to delivery tasks using live
+  routing, traffic, weather, and news signals. Three tasks of increasing
+  difficulty test driver selection under tight constraints.
+
+spec_version: 1
+environment_id: kushalkambar5/intelligent-logistics-orchestration
+
+runtime:
+  type: docker
+  port: 7860
+
+tasks:
+  - id: task_easy
+    name: Optimal Driver Selection
+    difficulty: easy
+    description: >
+      Choose the single best driver from a pool of 5 for one delivery.
+      Reward is the ratio of achieved effective speed to the theoretical max.
+
+  - id: task_medium
+    name: Multi-Step Delivery
+    difficulty: medium
+    description: >
+      Manage 3 consecutive deliveries with 8-12 drivers. Driver capacities
+      degrade with each delivery. Score is normalised avg effective speed.
+
+  - id: task_hard
+    name: Full Logistics Episode
+    difficulty: hard
+    description: >
+      Run a complete 5-assignment episode with 5-20 drivers. Drivers leave
+      the pool when exhausted. Score is a composite of delivery completeness,
+      avg effective speed, and driver utilisation efficiency.
+
+action_space:
+  type: discrete
+  description: Select a driver_id from the available pool
+
+observation_space:
+  type: dict
+  fields:
+    - name: step
+      type: int
+    - name: assignment
+      type: object
+    - name: drivers
+      type: array
+    - name: episode_stats
+      type: object
+
+endpoints:
+  reset: POST /reset
+  step:  POST /step
+  state: GET  /state
+  tasks: GET  /tasks
