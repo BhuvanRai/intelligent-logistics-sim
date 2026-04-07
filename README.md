@@ -8,7 +8,7 @@ app_port: 7860
 app_file: app/main.py
 pinned: false
 license: mit
-short_description: AI logistics orchestrator managing traffic, weather, and drivers.
+short_description: OpenEnv reinforcement learning environment for logistics assignment.
 ---
 
 # Intelligent Logistics Orchestration (OpenEnv)
@@ -192,3 +192,5 @@ This script cleanly initializes your model against the local API, loops through 
 ```
 
 *Note: You can pass custom seeds (`--seed 42`) specifically when generating offline validation subsets to guarantee identical driver arrays and coordinate spans across differing tests algorithms.*
+
+Enjoy dissecting your dispatch logic!

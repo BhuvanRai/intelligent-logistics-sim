@@ -128,6 +128,10 @@ class ResetRequest(BaseModel):
         default=None,
         description="Optional random seed for reproducibility",
     )
+    use_real_api: Optional[bool] = Field(
+        default=None,
+        description="Override the default environment variable for using real external APIs.",
+    )
 
 
 class ResetResponse(BaseModel):

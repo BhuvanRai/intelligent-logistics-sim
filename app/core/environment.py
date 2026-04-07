@@ -44,8 +44,10 @@ def _build_observation(state: Dict, session_id: str) -> Observation:
     asgn_raw = state["current_assignment"]
     drivers  = state["driver_pool"]
 
+    use_real_api = state.get("use_real_api", USE_REAL_API)
+
                                          
-    if USE_REAL_API:
+    if use_real_api:
         try:
             from app.utils.driver_factors import get_driver_factors
             factors = get_driver_factors(
@@ -138,10 +140,13 @@ def reset(request: ResetRequest) -> ResetResponse:
     episode = build_episode(task_id, request.seed)
 
     sid = new_session()
+    use_real_api = request.use_real_api if request.use_real_api is not None else USE_REAL_API
+
     state: Dict[str, Any] = {
         "task_id":               task_id,
         "step":                  0,
         "done":                  False,
+        "use_real_api":          use_real_api,
         "driver_pool":           episode["driver_pool"],
         "assignment_queue":      episode["assignment_queue"],
         "assignment_queue_index": 0,

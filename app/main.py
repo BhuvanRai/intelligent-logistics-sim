@@ -116,6 +116,7 @@ async def api_reset(request: ResetRequest) -> ResetResponse:
 
     - **task_id**: `task_easy` | `task_medium` | `task_hard`
     - **seed**: optional integer for reproducibility
+    - **use_real_api**: optional boolean to force/skip real API usage per session
     """
     return reset(request)
 
