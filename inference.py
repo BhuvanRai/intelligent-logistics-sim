@@ -6,7 +6,8 @@ import sys
 import time
 from typing import Any, Dict, List, Optional
 
-import aiohttp
+import urllib.request
+import urllib.error
 from openai import OpenAI
 
 API_BASE_URL = os.environ.get("API_BASE_URL", "https://api.openai.com/v1")
@@ -61,31 +62,42 @@ class LogisticsEnv:
         self.task_id = task_id
         self.seed = seed
         self.session_id = None
-        self.session = aiohttp.ClientSession()
 
     async def reset(self) -> ResetResult:
         payload = {"task_id": self.task_id}
         if self.seed is not None:
             payload["seed"] = self.seed
-        async with self.session.post(f"{self.base_url}/reset", json=payload) as resp:
-            resp.raise_for_status()
-            data = await resp.json()
-            self.session_id = data["session_id"]
-            return ResetResult(LogisticsObservation(data["observation"]), self.session_id)
+            
+        def _do_reset():
+            req = urllib.request.Request(f"{self.base_url}/reset", data=json.dumps(payload).encode(), headers={'Content-Type': 'application/json'})
+            with urllib.request.urlopen(req) as resp:
+                if resp.getcode() >= 400:
+                    raise Exception(f"HTTP Error {resp.getcode()}")
+                return json.loads(resp.read().decode())
+
+        data = await asyncio.to_thread(_do_reset)
+        self.session_id = data["session_id"]
+        return ResetResult(LogisticsObservation(data["observation"]), self.session_id)
 
     async def step(self, action: LogisticsAction) -> StepResult:
         payload = {"session_id": self.session_id, "driver_id": action.driver_id}
+        
+        def _do_step():
+            req = urllib.request.Request(f"{self.base_url}/step", data=json.dumps(payload).encode(), headers={'Content-Type': 'application/json'})
+            with urllib.request.urlopen(req) as resp:
+                if resp.getcode() >= 400:
+                    raise Exception(f"HTTP Error {resp.getcode()}")
+                return json.loads(resp.read().decode())
+
         try:
-            async with self.session.post(f"{self.base_url}/step", json=payload) as resp:
-                resp.raise_for_status()
-                data = await resp.json()
-                return StepResult(
-                    observation=LogisticsObservation(data["observation"]),
-                    reward=float(data["reward"]),
-                    done=data["done"],
-                    score=float(data.get("score") or 0.0),
-                    error=None
-                )
+            data = await asyncio.to_thread(_do_step)
+            return StepResult(
+                observation=LogisticsObservation(data["observation"]),
+                reward=float(data["reward"]),
+                done=data["done"],
+                score=float(data.get("score") or 0.0),
+                error=None
+            )
         except Exception as e:
             return StepResult(
                 observation=LogisticsObservation({}),
@@ -96,7 +108,7 @@ class LogisticsEnv:
             )
 
     async def close(self):
-        await self.session.close()
+        pass
 
 
 def get_model_message(client: OpenAI, obs: LogisticsObservation, history: List[str]) -> LogisticsAction:
