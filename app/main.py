@@ -109,8 +109,10 @@ async def root() -> Dict[str, Any]:
                          
                                                                                 
 
+from typing import Optional
+
 @app.post("/reset", response_model=ResetResponse, tags=["openenv"])
-async def api_reset(request: ResetRequest) -> ResetResponse:
+async def api_reset(request: Optional[ResetRequest] = None) -> ResetResponse:
     """
     Start a new episode.
 
@@ -118,6 +120,8 @@ async def api_reset(request: ResetRequest) -> ResetResponse:
     - **seed**: optional integer for reproducibility
     - **use_real_api**: optional boolean to force/skip real API usage per session
     """
+    if request is None:
+        request = ResetRequest()
     return reset(request)
 
 
